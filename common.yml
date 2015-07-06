@@ -1,0 +1,20 @@
+---
+- hosts: all
+  remote_user: zyadmin
+  vars:
+    eth0ip: "{{ansible_eth0.ipv4.address}}"
+  sudo: yes
+  tasks:
+  - name: install python-pymongo
+    yum: name=python-pymongo state=present
+  - name: copy mongo.py to /alidata/mongo.py
+    copy: src=mongo.py dest=/alidata/mongo.py
+  - name: copy mongo.j2 to /usr/local/zabbix-agentd/etc/zabbix_agentd.conf.d/mongo.conf
+    template: src=mongo.j2 dest=/usr/local/zabbix-agentd/etc/zabbix_agentd.conf.d/mongo.conf
+    notify: restart zabbix-agent
+  - name: delete /opt/mongo.py
+    file: path=/opt/mongo.py state=absent
+
+  handlers:
+    - name: restart zabbix-agent
+      service: name=zabbix_agentd state=restarted
